@@ -1,6 +1,8 @@
 import streamlit as st
 import google.generativeai as genai
 import textstat
+import plotly.graph_objs as go
+import numpy as np
 
 def initialize_gemini_client(api_key):
     """Initialize the Google Gemini client with the provided API key."""
@@ -9,42 +11,103 @@ def initialize_gemini_client(api_key):
         model_name="gemini-1.5-pro-exp-0801",
     )
 
-def process_response(response, prompt_type):
+def generate_quadratic_graph(a, b, c):
+    """Generate a Plotly graph for a quadratic function."""
+    x = np.linspace(-10, 10, 100)
+    y = a * x**2 + b * x + c
+    
+    fig = go.Figure(data=go.Scatter(x=x, y=y, mode='lines'))
+    fig.update_layout(
+        title=f'Quadratic Function: y = {a}x² + {b}x + {c}',
+        xaxis_title='x',
+        yaxis_title='y'
+    )
+    return fig
+
+def calculate_metrics(text):
+    """Calculate readability metrics for the given text."""
+    return {
+        "flesch_grade": textstat.flesch_kincaid_grade(text),
+        "flesch_ease": textstat.flesch_reading_ease(text),
+        "avg_words_per_sentence": textstat.avg_sentence_length(text)
+    }
+
+def display_metrics(metrics):
+    """Display readability metrics."""
+    st.write(f"- Flesch-Kincaid Grade: {metrics['flesch_grade']:.2f}")
+    st.write(f"- Flesch Reading Ease: {metrics['flesch_ease']:.2f}")
+    st.write(f"- Avg Words per Sentence: {metrics['avg_words_per_sentence']:.2f}")
+
+def process_response(response, prompt_type, include_graph):
     """
     Processes the Gemini response based on the type of prompt.
     """
-    st.subheader(f"Response for {prompt_type}:")
+    st.subheader(f"Initial Response for {prompt_type}:")
     st.write(response)
     
-    # Calculate readability metrics
-    flesch_grade = textstat.flesch_kincaid_grade(response)
-    flesch_ease = textstat.flesch_reading_ease(response)
-    avg_words_per_sentence = textstat.avg_sentence_length(response)
-    
-    st.subheader("Readability Metrics:")
-    st.write(f"- Flesch-Kincaid Grade: {flesch_grade:.2f}")
-    st.write(f"- Flesch Reading Ease: {flesch_ease:.2f}")
-    st.write(f"- Avg Words per Sentence: {avg_words_per_sentence:.2f}")
+    metrics = calculate_metrics(response)
+    st.subheader("Initial Readability Metrics:")
+    display_metrics(metrics)
     
     if prompt_type == "explanation":
-        # Extract 'why' questions for elaborative interrogation
         why_questions = [sent for sent in response.split('.') if 'why' in sent.lower()]
         st.subheader("Elaborative Interrogation Questions:")
         for question in why_questions:
             st.write(f"- {question.strip()}?")
+        
+        if include_graph:
+            st.subheader("Example Quadratic Function Graph:")
+            fig = generate_quadratic_graph(1, 0, -4)  # y = x² - 4
+            st.plotly_chart(fig)
     
     elif prompt_type == "practice":
-        # Count problems and mention interleaved practice
         problem_count = response.count("Problem")
         st.write(f"Number of problems generated: {problem_count}")
         st.write("Interleaved Practice: Mixed solving methods and applications detected")
+        
+        if include_graph:
+            st.subheader("Example Problem Visualization:")
+            fig = generate_quadratic_graph(2, -4, -2)  # y = 2x² - 4x - 2
+            st.plotly_chart(fig)
     
     elif prompt_type == "applications":
-        # Count applications and create a self-test opportunity
         application_count = response.count("Application")
         st.write(f"Number of applications provided: {application_count}")
         st.subheader("Self-Test Opportunity:")
         st.write("Quiz: Can you identify the quadratic equation in each application?")
+        
+        if include_graph:
+            st.subheader("Example Application Graph:")
+            fig = generate_quadratic_graph(-4.9, 20, 0)  # Projectile motion: h = -4.9t² + 20t
+            fig.update_layout(title="Projectile Motion: Height vs Time")
+            st.plotly_chart(fig)
+    
+    return metrics
+
+def improve_content(chat_session, original_prompt, response, metrics, prompt_type):
+    """
+    Send a follow-up prompt to improve the content based on the metrics.
+    """
+    improvement_prompt = f"""
+    Please improve the following content about quadratic equations. The current metrics are:
+    - Flesch-Kincaid Grade: {metrics['flesch_grade']:.2f}
+    - Flesch Reading Ease: {metrics['flesch_ease']:.2f}
+    - Avg Words per Sentence: {metrics['avg_words_per_sentence']:.2f}
+
+    For {prompt_type}, aim for:
+    - Flesch-Kincaid Grade: 9-10
+    - Flesch Reading Ease: Above 60
+    - Avg Words per Sentence: 15-20
+
+    Make the content more engaging and easier to understand for high school students in India.
+    Maintain the core information and examples, but simplify the language where possible.
+    
+    Original content:
+    {response}
+    """
+    
+    improved_response = chat_session.send_message(improvement_prompt)
+    return improved_response.text
 
 def main():
     st.title("Quadratic Equations Learning Content Generator")
@@ -58,6 +121,8 @@ def main():
         prompt_types = ["explanation", "practice", "applications"]
         selected_type = st.selectbox("Select content type:", prompt_types)
         
+        include_graph = st.checkbox("Include graph/diagram", value=True)
+        
         prompts = {
             "explanation": "Create an engaging explanation of quadratic equations for high school students in India. Define quadratic equations, explain solving methods (factoring, completing the square, quadratic formula), discuss the discriminant's role, describe graphical representation, and provide step-by-step examples. Use self-explanation techniques and include 'why' questions. Aim for a Flesch-Kincaid Grade level of 9-10 and an average of 15-20 words per sentence.",
             "practice": "Generate 10 quadratic equation practice problems for Indian high school students. For each problem, state the question clearly, provide a step-by-step solution using self-explanation, and include a common mistake and how to avoid it. Incorporate interleaved practice by mixing different solving methods and real-world applications. Use mnemonics where appropriate. Ensure a gradual progression in difficulty. Aim for a Flesch Reading Ease score above 60.",
@@ -65,9 +130,18 @@ def main():
         }
         
         if st.button("Generate Content"):
-            with st.spinner("Generating content..."):
-                response = chat_session.send_message(prompts[selected_type])
-                process_response(response.text, selected_type)
+            with st.spinner("Generating initial content..."):
+                initial_response = chat_session.send_message(prompts[selected_type])
+                initial_metrics = process_response(initial_response.text, selected_type, include_graph)
+            
+            with st.spinner("Improving content based on metrics..."):
+                improved_response = improve_content(chat_session, prompts[selected_type], initial_response.text, initial_metrics, selected_type)
+                st.subheader("Improved Content:")
+                st.write(improved_response)
+                
+                improved_metrics = calculate_metrics(improved_response)
+                st.subheader("Improved Readability Metrics:")
+                display_metrics(improved_metrics)
 
 if __name__ == "__main__":
     main()
