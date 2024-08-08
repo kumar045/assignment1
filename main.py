@@ -31,15 +31,11 @@ def process_response(response, prompt_type, include_graph):
     st.subheader(f"Response for {prompt_type}:")
     st.write(response)
     
-    # Calculate readability metrics
+    # Calculate readability metrics for further improving prompt
     flesch_grade = textstat.flesch_kincaid_grade(response)
     flesch_ease = textstat.flesch_reading_ease(response)
     avg_words_per_sentence = textstat.avg_sentence_length(response)
-    
-    st.subheader("Readability Metrics:")
-    st.write(f"- Flesch-Kincaid Grade: {flesch_grade:.2f}")
-    st.write(f"- Flesch Reading Ease: {flesch_ease:.2f}")
-    st.write(f"- Avg Words per Sentence: {avg_words_per_sentence:.2f}")
+
     
     if prompt_type == "explanation":
         # Extract 'why' questions for elaborative interrogation
