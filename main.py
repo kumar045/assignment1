@@ -24,32 +24,25 @@ def generate_quadratic_graph(a, b, c):
     )
     return fig
 
-def calculate_metrics(text):
-    """Calculate readability metrics for the given text."""
-    return {
-        "flesch_grade": textstat.flesch_kincaid_grade(text),
-        "flesch_ease": textstat.flesch_reading_ease(text),
-        "avg_words_per_sentence": textstat.avg_sentence_length(text)
-    }
-
-def display_metrics(metrics):
-    """Display readability metrics."""
-    st.write(f"- Flesch-Kincaid Grade: {metrics['flesch_grade']:.2f}")
-    st.write(f"- Flesch Reading Ease: {metrics['flesch_ease']:.2f}")
-    st.write(f"- Avg Words per Sentence: {metrics['avg_words_per_sentence']:.2f}")
-
 def process_response(response, prompt_type, include_graph):
     """
     Processes the Gemini response based on the type of prompt.
     """
-    st.subheader(f"Initial Response for {prompt_type}:")
+    st.subheader(f"Response for {prompt_type}:")
     st.write(response)
     
-    metrics = calculate_metrics(response)
-    st.subheader("Initial Readability Metrics:")
-    display_metrics(metrics)
+    # Calculate readability metrics
+    flesch_grade = textstat.flesch_kincaid_grade(response)
+    flesch_ease = textstat.flesch_reading_ease(response)
+    avg_words_per_sentence = textstat.avg_sentence_length(response)
+    
+    st.subheader("Readability Metrics:")
+    st.write(f"- Flesch-Kincaid Grade: {flesch_grade:.2f}")
+    st.write(f"- Flesch Reading Ease: {flesch_ease:.2f}")
+    st.write(f"- Avg Words per Sentence: {avg_words_per_sentence:.2f}")
     
     if prompt_type == "explanation":
+        # Extract 'why' questions for elaborative interrogation
         why_questions = [sent for sent in response.split('.') if 'why' in sent.lower()]
         st.subheader("Elaborative Interrogation Questions:")
         for question in why_questions:
@@ -61,6 +54,7 @@ def process_response(response, prompt_type, include_graph):
             st.plotly_chart(fig)
     
     elif prompt_type == "practice":
+        # Count problems and mention interleaved practice
         problem_count = response.count("Problem")
         st.write(f"Number of problems generated: {problem_count}")
         st.write("Interleaved Practice: Mixed solving methods and applications detected")
@@ -71,6 +65,7 @@ def process_response(response, prompt_type, include_graph):
             st.plotly_chart(fig)
     
     elif prompt_type == "applications":
+        # Count applications and create a self-test opportunity
         application_count = response.count("Application")
         st.write(f"Number of applications provided: {application_count}")
         st.subheader("Self-Test Opportunity:")
@@ -81,33 +76,6 @@ def process_response(response, prompt_type, include_graph):
             fig = generate_quadratic_graph(-4.9, 20, 0)  # Projectile motion: h = -4.9t² + 20t
             fig.update_layout(title="Projectile Motion: Height vs Time")
             st.plotly_chart(fig)
-    
-    return metrics
-
-def improve_content(chat_session, original_prompt, response, metrics, prompt_type):
-    """
-    Send a follow-up prompt to improve the content based on the metrics.
-    """
-    improvement_prompt = f"""
-    Please improve the following content about quadratic equations. The current metrics are:
-    - Flesch-Kincaid Grade: {metrics['flesch_grade']:.2f}
-    - Flesch Reading Ease: {metrics['flesch_ease']:.2f}
-    - Avg Words per Sentence: {metrics['avg_words_per_sentence']:.2f}
-
-    For {prompt_type}, aim for:
-    - Flesch-Kincaid Grade: 9-10
-    - Flesch Reading Ease: Above 60
-    - Avg Words per Sentence: 15-20
-
-    Make the content more engaging and easier to understand for high school students in India.
-    Maintain the core information and examples, but simplify the language where possible.
-    
-    Original content:
-    {response}
-    """
-    
-    improved_response = chat_session.send_message(improvement_prompt)
-    return improved_response.text
 
 def main():
     st.title("Quadratic Equations Learning Content Generator")
@@ -130,18 +98,9 @@ def main():
         }
         
         if st.button("Generate Content"):
-            with st.spinner("Generating initial content..."):
-                initial_response = chat_session.send_message(prompts[selected_type])
-                initial_metrics = process_response(initial_response.text, selected_type, include_graph)
-            
-            with st.spinner("Improving content based on metrics..."):
-                improved_response = improve_content(chat_session, prompts[selected_type], initial_response.text, initial_metrics, selected_type)
-                st.subheader("Improved Content:")
-                st.write(improved_response)
-                
-                improved_metrics = calculate_metrics(improved_response)
-                st.subheader("Improved Readability Metrics:")
-                display_metrics(improved_metrics)
+            with st.spinner("Generating content..."):
+                response = chat_session.send_message(prompts[selected_type])
+                process_response(response.text, selected_type, include_graph)
 
 if __name__ == "__main__":
     main()
