@@ -31,7 +31,7 @@ def process_response(response, prompt_type, include_graph):
     st.subheader(f"Response for {prompt_type}:")
     st.write(response)
     
-    # Calculate readability metrics for further improving prompt
+    # Calculate readability metrics for further improving prompt so that we can use it for the future
     flesch_grade = textstat.flesch_kincaid_grade(response)
     flesch_ease = textstat.flesch_reading_ease(response)
     avg_words_per_sentence = textstat.avg_sentence_length(response)
@@ -74,7 +74,7 @@ def process_response(response, prompt_type, include_graph):
             st.plotly_chart(fig)
 
 def main():
-    st.title("Quadratic Equations Learning Content Generator")
+    st.title("Quadratic Equations Learning Tool")
     
     api_key = st.text_input("Enter your Gemini API Key", type="password")
     
