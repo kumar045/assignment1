@@ -1,0 +1,8 @@
+Run the command to start the project in your local environment
+streamlit run main.py
+
+I have also deployed the app on streamlit cloud
+https://assignmentforcoschool.streamlit.app
+
+You can use the API KEY to run the Gemini model
+AIzaSyAlr9TxYXcckIAXUCqRH_z5PqmXyKaxPvo
