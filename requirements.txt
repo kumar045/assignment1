@@ -1,7 +1,5 @@
 # This file lists the Python packages needed for the Quadratic Equations Learning Tool
 streamlit
-PyPDF2==3.0.1
 google-generativeai
 textstat
-anthropic
 plotly
