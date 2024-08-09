@@ -5,14 +5,14 @@ import plotly.graph_objs as go
 import numpy as np
 
 def initialize_gemini_client(api_key):
-    """Initialize the Google Gemini client with the provided API key."""
+    """Use the API key to start the Google Gemini tool."""
     genai.configure(api_key=api_key)
     return genai.GenerativeModel(
         model_name="gemini-1.5-pro-exp-0801",
     )
 
 def generate_quadratic_graph(a, b, c):
-    """Generate a Plotly graph for a quadratic function."""
+    """Make a graph for a math equation that looks like a U shape."""
     x = np.linspace(-10, 10, 100)
     y = a * x**2 + b * x + c
     
@@ -26,50 +26,50 @@ def generate_quadratic_graph(a, b, c):
 
 def process_response(response, prompt_type, include_graph):
     """
-    Processes the Gemini response based on the type of prompt.
+    Depending on what type of question was asked, show the answer in different ways.
     """
     st.subheader(f"Response for {prompt_type}:")
     st.write(response)
     
-    # Calculate readability metrics for further improving prompt so that we can use it for the future
+    # Check how easy or hard the text is to read.
     flesch_grade = textstat.flesch_kincaid_grade(response)
     flesch_ease = textstat.flesch_reading_ease(response)
     avg_words_per_sentence = textstat.avg_sentence_length(response)
 
     
     if prompt_type == "explanation":
-        # Extract 'why' questions for elaborative interrogation
+        # Find and show questions that ask "why"
         why_questions = [sent for sent in response.split('.') if 'why' in sent.lower()]
-        st.subheader("Elaborative Interrogation Questions:")
+        st.subheader("Questions that ask 'Why':")
         for question in why_questions:
             st.write(f"- {question.strip()}?")
         
         if include_graph:
-            st.subheader("Example Quadratic Function Graph:")
+            st.subheader("Example Graph of a U-shaped Equation:")
             fig = generate_quadratic_graph(1, 0, -4)  # y = x² - 4
             st.plotly_chart(fig)
     
     elif prompt_type == "practice":
-        # Count problems and mention interleaved practice
+        # Count how many problems were made and show mixed practice
         problem_count = response.count("Problem")
-        st.write(f"Number of problems generated: {problem_count}")
-        st.write("Interleaved Practice: Mixed solving methods and applications detected")
+        st.write(f"Number of problems created: {problem_count}")
+        st.write("Mixed Practice: Different solving methods and applications used")
         
         if include_graph:
-            st.subheader("Example Problem Visualization:")
+            st.subheader("Example Graph of a Math Problem:")
             fig = generate_quadratic_graph(2, -4, -2)  # y = 2x² - 4x - 2
             st.plotly_chart(fig)
     
     elif prompt_type == "applications":
-        # Count applications and create a self-test opportunity
+        # Count how many real-world uses were given and ask a self-test question
         application_count = response.count("Application")
-        st.write(f"Number of applications provided: {application_count}")
-        st.subheader("Self-Test Opportunity:")
-        st.write("Quiz: Can you identify the quadratic equation in each application?")
+        st.write(f"Number of real-world uses explained: {application_count}")
+        st.subheader("Self-Test Question:")
+        st.write("Quiz: Can you find the quadratic equation in each example?")
         
         if include_graph:
-            st.subheader("Example Application Graph:")
-            fig = generate_quadratic_graph(-4.9, 20, 0)  # Projectile motion: h = -4.9t² + 20t
+            st.subheader("Example Graph of a Real-World Use:")
+            fig = generate_quadratic_graph(-4.9, 20, 0)  # Projectile motion: height vs. time
             fig.update_layout(title="Projectile Motion: Height vs Time")
             st.plotly_chart(fig)
 
@@ -88,9 +88,9 @@ def main():
         include_graph = st.checkbox("Include graph/diagram", value=True)
         
         prompts = {
-            "explanation": "Create an engaging explanation of quadratic equations for high school students in India. Define quadratic equations, explain solving methods (factoring, completing the square, quadratic formula), discuss the discriminant's role, describe graphical representation, and provide step-by-step examples. Use self-explanation techniques and include 'why' questions. Aim for a Flesch-Kincaid Grade level of 9-10 and an average of 15-20 words per sentence.",
-            "practice": "Generate 10 quadratic equation practice problems for Indian high school students. For each problem, state the question clearly, provide a step-by-step solution using self-explanation, and include a common mistake and how to avoid it. Incorporate interleaved practice by mixing different solving methods and real-world applications. Use mnemonics where appropriate. Ensure a gradual progression in difficulty. Aim for a Flesch Reading Ease score above 60.",
-            "applications": "Describe 5 real-world applications of quadratic equations relevant to Indian high school students. For each application, explain the scenario and its connection to quadratic equations, provide a sample problem, show the solution process, and discuss why understanding quadratic equations matters in this context. Choose diverse, culturally relevant applications. Use the MEVCH approach to engage students emotionally. Include opportunities for self-testing and summarization. Keep the average syllables per word below 1.5 for better readability."
+            "explanation": "Create an easy-to-understand explanation of quadratic equations for high school students in India. Define quadratic equations, explain how to solve them (factoring, completing the square, quadratic formula), discuss the discriminant's role, describe the graph of the equation, and give step-by-step examples. Use questions that start with 'why'. Aim for a reading level of grades 9-10 and sentences with 15-20 words.",
+            "practice": "Create 10 practice problems with quadratic equations for high school students in India. For each problem, clearly state the question, provide a step-by-step solution, and include common mistakes and how to avoid them. Mix different solving methods and real-world applications. Use easy memory tricks. Ensure problems get harder gradually. Aim for easy-to-read text with a Flesch Reading Ease score above 60.",
+            "applications": "Describe 5 real-world uses of quadratic equations for high school students in India. For each use, explain the situation and how it connects to quadratic equations, give a sample problem, show how to solve it, and explain why understanding quadratic equations is important. Use diverse and culturally relevant examples. Include a self-test question and summarization. Use simple words for better readability."
         }
         
         if st.button("Generate Content"):
