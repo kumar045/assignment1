@@ -31,7 +31,7 @@ def process_response(response, prompt_type, include_graph):
     st.subheader(f"Response for {prompt_type}:")
     st.write(response)
     
-    # Check how easy or hard the text is to read. This is one of my research
+    # Check how easy or hard the text is to read. This is one of my research we can store it and use later to improve prompt
     flesch_grade = textstat.flesch_kincaid_grade(response)
     flesch_ease = textstat.flesch_reading_ease(response)
     avg_words_per_sentence = textstat.avg_sentence_length(response)
