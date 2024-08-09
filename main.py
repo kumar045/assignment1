@@ -12,7 +12,7 @@ def initialize_gemini_client(api_key):
     )
 
 def generate_quadratic_graph(a, b, c):
-    """Make a graph for a math equation that looks like a U shape."""
+    """Make a graph for a Quadratic equation that looks like a U shape."""
     x = np.linspace(-10, 10, 100)
     y = a * x**2 + b * x + c
     
@@ -31,14 +31,14 @@ def process_response(response, prompt_type, include_graph):
     st.subheader(f"Response for {prompt_type}:")
     st.write(response)
     
-    # Check how easy or hard the text is to read.
+    # Check how easy or hard the text is to read. This is one of my research
     flesch_grade = textstat.flesch_kincaid_grade(response)
     flesch_ease = textstat.flesch_reading_ease(response)
     avg_words_per_sentence = textstat.avg_sentence_length(response)
 
     
     if prompt_type == "explanation":
-        # Find and show questions that ask "why"
+        # Find and display "why" oriented questions.
         why_questions = [sent for sent in response.split('.') if 'why' in sent.lower()]
         st.subheader("Questions that ask 'Why':")
         for question in why_questions:
@@ -69,7 +69,7 @@ def process_response(response, prompt_type, include_graph):
         
         if include_graph:
             st.subheader("Example Graph of a Real-World Use:")
-            fig = generate_quadratic_graph(-4.9, 20, 0)  # Projectile motion: height vs. time
+            fig = generate_quadratic_graph(-4.9, 20, 0)  # This is Projectile motion: height vs time
             fig.update_layout(title="Projectile Motion: Height vs Time")
             st.plotly_chart(fig)
 
