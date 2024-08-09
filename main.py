@@ -89,7 +89,7 @@ def main():
         
         include_graph = st.checkbox("Include graph/diagram", value=True)
         
-        # This is our prompt 
+        # This is our prompts
         prompts = {
             "explanation": "Create an easy-to-understand explanation of quadratic equations for high school students in India. Define quadratic equations, explain how to solve them (factoring, completing the square, quadratic formula), discuss the discriminant's role, describe the graph of the equation, and give step-by-step examples. Use questions that start with 'why'. Aim for a reading level of grades 9-10 and sentences with 15-20 words.",
             "practice": "Create 10 practice problems with quadratic equations for high school students in India. For each problem, clearly state the question, provide a step-by-step solution, and include common mistakes and how to avoid them. Mix different solving methods and real-world applications. Use easy memory tricks. Ensure problems get harder gradually. Aim for easy-to-read text with a Flesch Reading Ease score above 60.",
